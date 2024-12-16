@@ -1,5 +1,7 @@
 "use client";
 import CardLayout from "@/components/elements/layoutcard";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import {
   TriangleAlert,
   CalendarCog,
@@ -11,8 +13,10 @@ import {
 import Link from "next/link";
 
 export default function Page() {
+   
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+     
       <CardLayout
         Icon={TriangleAlert}
         Content={

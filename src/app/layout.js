@@ -2,6 +2,7 @@ import localFont from "next/font/local";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/elements/Header";
+import { ResultProvider } from "@/context/ResultContext";
 
 const itim = Inter({
   subsets: ["latin"],
@@ -34,8 +35,10 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${itim.className}`}>
-        <Header />
-        <div>{children}</div>
+        <ResultProvider>
+          <Header />
+          <div>{children}</div>
+        </ResultProvider>
       </body>
     </html>
   );
