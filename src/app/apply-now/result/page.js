@@ -1,6 +1,7 @@
 "use client";
 
-import { useResult } from "@/context/ResultContext";
+import Loader from "@/components/elements/Loader";
+import { useRouter } from "next/navigation";
 
 const gradeToGPA = {
   "A+": 5.0,
@@ -13,24 +14,30 @@ const gradeToGPA = {
   F: 0.0,
 };
 export default function ResultPage() {
-  const { resultData } = useResult();
+  const resultData = JSON.parse(localStorage.getItem("user"));
+  const router = useRouter();
 
+  console.log(resultData);
   if (!resultData) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   const { sscDetails, hscDetails, registration } = resultData;
 
-  const hscSubjectEligibility = hscDetails.subjectGrades.map((subject) => {
+  const hscSubjectEligibility = hscDetails?.subjectGrades?.map((subject) => {
     return (
       ["176", "174", "265"].includes(subject.subjectCode) &&
       gradeToGPA[subject.subjectGPA] >= 3.0
     );
   });
 
-  const sscGPA = parseFloat(sscDetails.gpa);
-  const hscGPA = parseFloat(hscDetails.gpa);
-  const totalGPA = sscGPA + hscGPA;
+  const sscGPA = parseFloat(sscDetails?.gpa);
+  const hscGPA = parseFloat(hscDetails?.gpa);
+  const totalGPA = parseFloat(sscGPA + hscGPA).toFixed(2);
+
+  let formData = JSON.parse(localStorage.getItem("formData")) || {};
+  formData = { ...formData, sscGPA, hscGPA, totalGPA };
+  localStorage.setItem("formData", JSON.stringify(formData));
 
   const isEligible = () => {
     return (
@@ -38,7 +45,7 @@ export default function ResultPage() {
     );
   };
 
-  const eligibility = isEligible() && sscDetails.group == "SCIENCE";
+  const eligibility = isEligible() && sscDetails?.group == "SCIENCE";
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center py-10 px-4 text-primary">
@@ -59,19 +66,21 @@ export default function ResultPage() {
           <tbody>
             <tr>
               <td className="p-2 border ">Name</td>
-              <td className="p-2 border ">{sscDetails.name}</td>
+              <td className="p-2 border ">{sscDetails?.name}</td>
             </tr>
             <tr>
               <td className="p-2 border">Date of Birth</td>
-              <td className="p-2 border">{sscDetails.dob}</td>
+              <td className="p-2 border">
+                {sscDetails?.dob || hscDetails?.dob}
+              </td>
             </tr>
             <tr>
               <td className="p-2 border">Father's Name</td>
-              <td className="p-2 border">{sscDetails.fatherName}</td>
+              <td className="p-2 border">{sscDetails?.fatherName}</td>
             </tr>
             <tr>
               <td className="p-2 border">Mother's Name</td>
-              <td className="p-2 border">{sscDetails.motherName}</td>
+              <td className="p-2 border">{sscDetails?.motherName}</td>
             </tr>
             <tr>
               <td className="p-2 border">Total GPA</td>
@@ -88,15 +97,19 @@ export default function ResultPage() {
           <tbody>
             <tr>
               <td className="p-2 border">Institution</td>
-              <td className="p-2 border">{sscDetails.institute}</td>
+              <td className="p-2 border">{sscDetails?.institute}</td>
             </tr>
             <tr>
               <td className="p-2 border">Type</td>
-              <td className="p-2 border">{sscDetails.type}</td>
+              <td className="p-2 border">{sscDetails?.type}</td>
             </tr>
             <tr>
               <td className="p-2 border">Result</td>
-              <td className="p-2 border text-primary">{sscDetails.result}</td>
+              <td className="p-2 border text-primary">{sscDetails?.result}</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">GPA</td>
+              <td className="p-2 border text-primary">{sscDetails?.gpa}</td>
             </tr>
           </tbody>
         </table>
@@ -111,11 +124,11 @@ export default function ResultPage() {
             </tr>
           </thead>
           <tbody>
-            {sscDetails.subjectGrades.map((subject, idx) => (
+            {sscDetails?.subjectGrades?.map((subject, idx) => (
               <tr key={idx}>
-                <td className="p-2 border">{subject.subjectCode}</td>
-                <td className="p-2 border">{subject.subjectName}</td>
-                <td className="p-2 border">{subject.subjectGPA}</td>
+                <td className="p-2 border">{subject?.subjectCode}</td>
+                <td className="p-2 border">{subject?.subjectName}</td>
+                <td className="p-2 border">{subject?.subjectGPA}</td>
               </tr>
             ))}
           </tbody>
@@ -131,15 +144,21 @@ export default function ResultPage() {
             <tbody>
               <tr>
                 <td className="p-2 border ">Institution</td>
-                <td className="p-2 border">{hscDetails.institute}</td>
+                <td className="p-2 border">{hscDetails?.institute}</td>
               </tr>
               <tr>
                 <td className="p-2 border ">Type</td>
-                <td className="p-2 border">{hscDetails.type}</td>
+                <td className="p-2 border">{hscDetails?.type}</td>
               </tr>
               <tr>
                 <td className="p-2 border ">Result</td>
-                <td className="p-2 border text-primary">{hscDetails.result}</td>
+                <td className="p-2 border text-primary">
+                  {hscDetails?.result}
+                </td>
+              </tr>
+              <tr>
+                <td className="p-2 border">GPA</td>
+                <td className="p-2 border text-primary">{hscDetails?.gpa}</td>
               </tr>
             </tbody>
           </table>
@@ -155,20 +174,26 @@ export default function ResultPage() {
             </tr>
           </thead>
           <tbody>
-            {hscDetails.subjectGrades.map((subject, idx) => (
+            {hscDetails?.subjectGrades?.map((subject, idx) => (
               <tr key={idx}>
-                <td className="p-2 border">{subject.subjectCode}</td>
-                <td className="p-2 border">{subject.subjectName}</td>
-                <td className="p-2 border">{subject.subjectGPA}</td>
+                <td className="p-2 border">{subject?.subjectCode}</td>
+                <td className="p-2 border">{subject?.subjectName}</td>
+                <td className="p-2 border">{subject?.subjectGPA}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <button className="bg-primary text-gray-100 font-semibold py-2 w-full max-w-2xl mt-6 space-y-4 rounded-lg  hover:bg-blue-600">
-        Next
-      </button>
+      {isEligible && <button
+        className="bg-primary text-gray-100 font-semibold py-2 w-full max-w-2xl mt-6 space-y-4 rounded-lg  hover:bg-blue-600"
+        onClick={(e) => {
+          e.preventDefault();
+          router.replace("/apply-now/info-submit");
+        }}
+      >
+        Apply
+      </button>}
     </div>
   );
 }

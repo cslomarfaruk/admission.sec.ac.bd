@@ -1,9 +1,16 @@
 "use client";
+import { TriangleAlert } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function CompleteInformation() {
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const router = useRouter();
+
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const [phone, setPhone] = useState("01796127821");
+  const [email, setEmail] = useState("straightlife149@gmail.com");
 
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -23,9 +30,34 @@ export default function CompleteInformation() {
     setSignaturePreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = (e) => {
+  const handleSendOTP = async () => {
+    const response = await fetch("/api/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (response.ok) {
+      setError("OTP sent to your email!");
+      router.replace(`/apply-now/otp?email=${email}`);
+    } else {
+      setError("Failed to send OTP! Please try again.");
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    if (!phone || !email || !photo || !signature) {
+      setError("Opps! All field must be filled");
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+      return;
+    }
+    await handleSendOTP();
     console.log({ phone, email, photo, signature });
+    setLoading(false);
   };
 
   return (
@@ -35,7 +67,6 @@ export default function CompleteInformation() {
           Complete your information
         </h2>
         <form onSubmit={handleSubmit}>
-          {/* Input Fields */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Phone No:</label>
             <input
@@ -113,12 +144,30 @@ export default function CompleteInformation() {
             </div>
           </div>
 
+          {error && (
+            <div className="flex justify-center items-center">
+              <TriangleAlert className="text-rose-700" />
+              <div className="text-center text-rose-700 font-semibold p-1 my-1">
+                {" "}
+                {error}
+              </div>
+            </div>
+          )}
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-primary text-white py-2 rounded-md font-medium hover:bg-blue-600"
+            className="bg-primary w-full hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+            disabled={loading}
           >
-            Submit
+            {loading ? (
+              <>
+                <div className="flex justify-center items-center">
+                  <div className="h-6 w-6 border-4 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                </div>
+              </>
+            ) : (
+              "Submit"
+            )}
           </button>
         </form>
 

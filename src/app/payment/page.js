@@ -8,14 +8,13 @@ export default function Payment() {
 
   const router = useRouter();
     useEffect(() => {
-      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      const user = JSON.parse(localStorage.getItem("user"));
       if (!user) {
         router.push("/login");
       }
     }, [router]);
   const handleConfirmPayment = () => {
     if (transactionId) {
-      // Simulating payment confirmation
       setIsConfirmed(true);
     }
   };

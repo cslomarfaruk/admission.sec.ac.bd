@@ -6,7 +6,7 @@ export default function StudentDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const user = JSON.parse(localStorage.getItem("user"));
     if (!user) {
       router.push("/login");
     }
@@ -18,7 +18,7 @@ export default function StudentDashboard() {
       <p>Welcome, Student!</p>
       <button
         onClick={() => {
-          localStorage.removeItem("loggedInUser");
+          localStorage.removeItem("user");
           router.push("/login");
         }}
         className="mt-4 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"

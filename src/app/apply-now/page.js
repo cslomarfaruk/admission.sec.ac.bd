@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
@@ -7,24 +7,45 @@ import { useResult } from "@/context/ResultContext";
 
 export default function StudentForm() {
   const currentYear = new Date().getFullYear();
-  const hscYears = [currentYear - 1, currentYear - 2];
-  const sscYears = [currentYear - 4, currentYear - 5];
+  const hscYears = [
+    currentYear - 1,
+    currentYear - 2,
+    currentYear - 3,
+    currentYear - 4,
+  ];
+  const sscYears = [
+    currentYear - 3,
+    currentYear - 4,
+    currentYear - 5,
+    currentYear - 6,
+  ];
 
   const [formData, setFormData] = useState({
-    rollHSC: "139498",
-    reg: "1418868768",
-    hscBoard: "Dinajpur",
-    hscYear: "2020",
-    rollSSC: "419746",
-    sscBoard: "Madrasah",
-    sscYear: "2017",
+    rollHSC: "",
+    reg: "",
+    hscBoard: "",
+    hscYear: "",
+    rollSSC: "",
+    sscBoard: "",
+    sscYear: "",
   });
+
+  useEffect(() => {
+    const savedData = localStorage.getItem("formData");
+    if (savedData) {
+      setFormData(JSON.parse(savedData));
+    }
+  }, []);
+
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const { setResultData } = useResult();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch("/api/fetchResult", {
         method: "POST",
@@ -32,17 +53,23 @@ export default function StudentForm() {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch result.");
-      }
+      const result = await response.json();
 
-      const result = await response.json(); // Parse as JSON if the response is JSON
-      console.log(result);
-      setResultData(result);
-      router.push(`/apply-now/result`);
+      if (response.ok && result.sscDetails && result.hscDetails) {
+        setResultData(result);
+        localStorage.setItem("user", JSON.stringify(result));
+        router.push("/apply-now/result");
+      } else {
+        setError(
+          result.error || !result.sscDetails || !result.hscDetails
+            ? "Opps! Result not found, check your information again."
+            : null
+        );
+      }
+    } catch (err) {
+      setError("Unexpected error occurred.");
+    } finally {
       setLoading(false);
-    } catch (error) {
-      console.error("Error:", error);
     }
   };
 
@@ -62,13 +89,10 @@ export default function StudentForm() {
   ];
 
   const handleChange = (field, value) => {
-    setFormData({
-      ...formData,
-      [field]: value,
-    });
+    const updatedFormData = { ...formData, [field]: value };
+    setFormData(updatedFormData);
+    localStorage.setItem("formData", JSON.stringify(updatedFormData));
   };
-
-  if (loading) return <div className="">Loading.............</div>;
 
   return (
     <>
@@ -78,8 +102,8 @@ export default function StudentForm() {
           <h2 className="text-lg font-semibold text-primary mb-6">
             Please fill up the form carefully
           </h2>
-          <form className="space-y-8" onSubmit={handleSubmit}>
-            {/* HSC Information */}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <h3 className="text-base font-medium text-gray-700 mb-4">
                 HSC Information
@@ -264,12 +288,27 @@ export default function StudentForm() {
                 </div>
               </div>
             </div>
-
+            {error && (
+              <>
+                <div className="text-lg text-rose-700 my-2 p-1 text-center">
+                  {error}
+                </div>
+              </>
+            )}
             <button
               type="submit"
-              className="w-full  bg-primary text-white py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
+              className="bg-primary w-full hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+              disabled={loading}
             >
-              Submit
+              {loading ? (
+                <>
+                  <div className="flex justify-center items-center">
+                    <div className="h-6 w-6 border-4 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  </div>
+                </>
+              ) : (
+                "Submit"
+              )}
             </button>
           </form>
         </div>

@@ -1,14 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function OTPVerification() {
-  const [otp, setOtp] = useState("");
-  const [email, setEmail] = useState("");
-  const [isOTPSent, setIsOTPSent] = useState(false);
-  const [timer, setTimer] = useState(120); // 2-minute timer
-  const [canResend, setCanResend] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
 
-  // Timer countdown logic
+  const [otp, setOtp] = useState("");
+  const [isOTPSent, setIsOTPSent] = useState(true);
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const [message, setMessage] = useState("");
+
   useEffect(() => {
     let countdown;
     if (isOTPSent && timer > 0) {
@@ -20,26 +24,95 @@ export default function OTPVerification() {
     return () => clearInterval(countdown);
   }, [isOTPSent, timer]);
 
-  const handleSendOTP = async () => {
-    const response = await fetch("/api/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
+  const handleDelete = async () => {
+    try {
+      const response = await fetch("/api/delete-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          table: "otps",
+          conditions: { email: email },
+        }),
+      });
 
-    if (response.ok) {
-      alert("OTP sent to your email!");
-      setIsOTPSent(true);
-      setTimer(120);
-      setCanResend(false);
-    } else {
-      alert("Failed to send OTP!");
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Data deleted successfully!");
+      } else {
+        alert(result.message || "Failed to delete data.");
+      }
+    } catch (error) {
+      console.error("Error deleting data:", error);
+      alert("An error occurred while deleting data.");
     }
   };
 
-  const handleSubmit = () => {
-    console.log("Entered OTP:", otp);
-    alert("OTP Submitted!");
+  const handleSendOTP = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
+        alert(errorData.error || "Failed to send OTP");
+        return;
+      }
+
+      const data = await response.json();
+      alert("OTP sent successfully!");
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      alert("An error occurred while sending OTP.");
+    }
+  };
+  const handleInsert = async (table,data) => {
+  
+    const response = await fetch("/api/insert-data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ table, data }),  
+    });
+  
+    const result = await response.json();
+    console.log(result);
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("/api/validate-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, otp }),
+      });
+  
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("OTP validated successfully!");
+        const data = JSON.parse(localStorage.getItem("user"));
+        const {sscDetails,hscDetails,registration} = data;
+
+        await handleInsert("results",{sscDetails,hscDetails,registration});
+        await handleDelete();
+        router.replace("/congratulation");
+      } else {
+        alert(result.message || "Failed to validate OTP.");
+      }
+    } catch (error) {
+      console.error("Error validating OTP:", error);
+      alert("An error occurred while validating OTP.");
+    }
   };
 
   return (

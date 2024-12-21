@@ -9,7 +9,6 @@ export default function AdmissionResult() {
   const { resultData } = useResult();
 
   const handleShowResult = (e) => {
-    // Mock authentication check
     if (userID && password && resultData) {
       setShowResult(true);
     } else {

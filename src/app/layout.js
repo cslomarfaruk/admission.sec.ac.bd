@@ -36,8 +36,10 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${itim.className}`}>
         <ResultProvider>
-          <Header />
-          <div>{children}</div>
+          <div className="flex flex-col h-full">
+            <Header />
+            <div className="flex-1 overflow-auto">{children}</div>
+          </div>
         </ResultProvider>
       </body>
     </html>

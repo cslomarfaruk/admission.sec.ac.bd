@@ -18,7 +18,6 @@ export async function POST(req) {
   };
 
   try {
-    // Parse and validate incoming data
     const formData = await req.json();
 
     if (!formData || typeof formData !== "object") {
@@ -27,7 +26,6 @@ export async function POST(req) {
       });
     }
 
-    // Sanitize and map input data
     formData.sscBoard = BOARD[formData.sscBoard] || null;
     formData.hscBoard = BOARD[formData.hscBoard] || null;
 
@@ -118,11 +116,11 @@ export async function POST(req) {
         );
 
         const resultPage = cheerio.load(submitResponse.data);
-
         const infoTable = resultPage("table.black12").first();
         const gradeSheet = resultPage("table.black12").last();
         const allSubjectGrades = [];
 
+        if (!infoTable) console.log("error while data fetch.....");
         gradeSheet
           .find("tr")
           .slice(1)
@@ -135,7 +133,7 @@ export async function POST(req) {
             });
           });
 
-        return {
+        const res = {
           name: infoTable.find("tr:nth-child(1) td:nth-child(4)").text().trim(),
           fatherName: infoTable
             .find("tr:nth-child(2) td:nth-child(4)")
@@ -163,9 +161,20 @@ export async function POST(req) {
           year,
           subjectGrades: allSubjectGrades,
         };
-      } catch (err) {
-        console.error("Fetch Result Error:", err.message);
-        throw new Error("Failed to fetch the result.");
+        if (!res.gpa) return null;
+        return res;
+      } catch (error) {
+        let errorMessage = "An unexpected error occurred.";
+        if (error.message.includes("Invalid input format")) {
+          errorMessage = "Please provide the correct input format.";
+        } else if (error.message.includes("Session cookie not found")) {
+          errorMessage =
+            "Failed to establish a session. Please try again later.";
+        } else if (error.message.includes("Failed to fetch the result")) {
+          errorMessage =
+            "Could not retrieve the result. Please check your input.";
+        }
+        throw new Error(errorMessage);
       }
     }
 
@@ -175,14 +184,13 @@ export async function POST(req) {
       formData.sscBoard,
       sscYear
     );
-
     const hscResult = await fetchResult(
       "hsc",
       rollHSC,
       formData.hscBoard,
       hscYear
     );
-    // console.log(sscResult.group)
+
     return new Response(
       JSON.stringify({
         statusCode: 200,

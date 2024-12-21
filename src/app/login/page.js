@@ -4,33 +4,38 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function Login() {
-  const [role, setRole] = useState("student");
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
 
-  // Check if user is already logged in
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
-      router.push(user.role === "admin" ? "/admin-dashboard" : "/student-dashboard");
+      const currentPath = window.location.pathname;
+      if (user.role === "admin" && currentPath !== "/admin/dashboard") {
+        router.replace("/admin/dashboard");
+      } else if (user.role === "student" && currentPath !== "/student-dashboard") {
+        router.replace("/student-dashboard");
+      }
     }
-  }, [router]);
+  }, []);
+  
+  const student = {id:"student",password:"1234"}
+  const admin = {id:"admin",password:"admin"}
 
   const handleLogin = (e) => {
     e.preventDefault();
     if (userId && password) {
-      if (role === "student" && userId === "student123" && password === "pass123") {
-        // Store user details in localStorage
+      if (userId === student.id && password === student.password) {      
         localStorage.setItem(
-          "loggedInUser",
-          JSON.stringify({ userId, role: "student" })
+          "user",
+          JSON.stringify({ userId, role: "student", password })
         );
         router.push("/student-dashboard");
-      } else if (role === "admin" && userId === "admin123" && password === "adminpass") {
+      } else if (userId === admin.id && password === admin.password) {
         localStorage.setItem(
-          "loggedInUser",
+          "user",
           JSON.stringify({ userId, role: "admin" })
         );
         router.push("/admin/dashboard");
@@ -47,25 +52,6 @@ export default function Login() {
       <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
         <h1 className="text-3xl font-bold text-primary mb-6 text-center">Login</h1>
 
-        <div className="mb-6 flex justify-around">
-          <button
-            className={`px-4 py-2 rounded-md ${
-              role === "student" ? "bg-primary text-white" : "bg-gray-200"
-            }`}
-            onClick={() => setRole("student")}
-          >
-            Student
-          </button>
-          <button
-            className={`px-4 py-2 rounded-md ${
-              role === "admin" ? "bg-primary text-white" : "bg-gray-200"
-            }`}
-            onClick={() => setRole("admin")}
-          >
-            Admin
-          </button>
-        </div>
-
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block mb-2 text-gray-700">User ID</label>
@@ -74,7 +60,7 @@ export default function Login() {
               placeholder="Enter your User ID"
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md focus:outline-primary"
             />
           </div>
           <div>
@@ -84,13 +70,13 @@ export default function Login() {
               placeholder="Enter your Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md focus:outline-primary"
             />
           </div>
           {error && <p className="text-red-600 text-sm">{error}</p>}
           <button
             type="submit"
-            className="w-full bg-primary text-white py-2 rounded-md hover:bg-green-600"
+            className="w-full bg-primary text-white py-2 rounded-md hover:bg-blue-600"
           >
             Login
           </button>
@@ -99,7 +85,7 @@ export default function Login() {
         <div className="text-center mt-6">
           <p className="text-gray-700 mb-2">Don't have an account yet?</p>
           <Link href="/apply-now">
-            <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-600">
+            <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-blue-600">
               Apply Now
             </button>
           </Link>

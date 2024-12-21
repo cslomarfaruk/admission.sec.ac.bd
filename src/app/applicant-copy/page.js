@@ -10,7 +10,7 @@ export default function ApplicantCard() {
   
   const router = useRouter();
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const user = JSON.parse(localStorage.getItem("user"));
     if (!user) {
       router.push("/login");
     }

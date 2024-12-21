@@ -3,12 +3,7 @@ import { createContext, useContext, useState } from "react";
 const ResultContext = createContext();
 
 export const ResultProvider = ({ children }) => {
-  const [resultData,setResultData] = useState({
-    totalApplicants: 150,
-    paidApplicants: 120,
-    unpaidApplicants: 30,
-    totalAmountPaid: 120000,
-  });
+  const [resultData, setResultData] = useState(null);
 
   return (
     <ResultContext.Provider value={{ resultData, setResultData }}>

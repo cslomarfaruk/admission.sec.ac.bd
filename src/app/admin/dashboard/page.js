@@ -8,8 +8,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-6">
-        <AdminHeader/>
-      {/* Overview Section */}
       <h1 className="text-3xl font-bold text-[#09816B] mb-6">Admin Dashboard</h1>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white shadow-md p-4 rounded-md">
