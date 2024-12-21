@@ -49,7 +49,7 @@ export default function CompleteInformation() {
     e.preventDefault();
     setLoading(true);
     if (!phone || !email || !photo || !signature) {
-      setError("Opps! All field must be filled");
+      setError("Opps! All fields are required");
       setTimeout(() => {
         setLoading(false);
       }, 1000);
@@ -120,7 +120,7 @@ export default function CompleteInformation() {
             </div>
 
             {/* Signature Upload */}
-            <div className="flex flex-col items-center border rounded-md p-3">
+            <div className="flex flex-col justify-center items-center border rounded-md p-3">
               {signaturePreview ? (
                 <img
                   src={signaturePreview}
@@ -144,7 +144,7 @@ export default function CompleteInformation() {
             </div>
           </div>
 
-          {error && (
+          {error && !loading && (
             <div className="flex justify-center items-center">
               <TriangleAlert className="text-rose-700" />
               <div className="text-center text-rose-700 font-semibold p-1 my-1">
